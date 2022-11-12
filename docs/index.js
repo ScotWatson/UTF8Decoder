@@ -128,7 +128,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
           this.#state = {};
         }
         this.#inputPushSink = new Streams.PushSink({
-          push: this.#execute,
+          push: Types.createStaticFunc(this, this.#execute),
         });
         this.#outputPushSource = new Streams.PushSource();
       } catch (e) {
