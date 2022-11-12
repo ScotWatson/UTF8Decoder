@@ -58,60 +58,140 @@ const asyncUnicode = (async function () {
   }
 })();
 
+
 async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
-  async function utf8decode(input) {
+  async function asyncUtf8DecodeInit() {
+    return {
+      value: 0,
+      contBytes: 0,
+    };
+  }
+  async function asyncUtf8Decode(input, state) {
     try {
-      let value;
-      let contBytes = 0;
-      let state = 0;
+      if (input === null) {
+        return null;
+      }
       if (!(Types.isInteger(input))) {
         throw "input must be an integer.";
       }
-      switch (state) {
-        case 0: // First byte
-          if (input < 0x80) {
-            value = 0;
-            return new Unicode.CodePoint(input);
-          } else if ((input & 0xE0) === 0xC0) {
-            value = (input & 0x1F);
-            contBytes = 1;
-            state = 1;
-          } else if ((input & 0xF0) === 0xE0)) {
-            value = (input & 0x0F);
-            contBytes = 2;
-            state = 1;
-          } else if ((input & 0xF8) === 0xF0) {
-            value = (input & 0x07);
-            contBytes = 3;
-            state = 1;
-          } else {
-            // Invalid byte, return Replacement Character
-            return new Unicode.CodePoint(0xFFFD);
-          }
-          state = 1;
-          break;
-        case 1: // Continuation Byte
-          if ((input & 0xC0) !== 0xF0) {
-            // Invalid byte, return Replacement Character
-            contBytes = 0;
-            state = 0;
-            return new Unicode.CodePoint(0xFFFD);
-          }
-          value <<= 6;
-          value |= (input & 0x3F);
-          --contBytes;
-          if (contBytes === 0) {
-            state = 0;
-          }
-          break;
-        default:
-          throw "Internal Logic Error: Invalid state value";
-      };
+      if (state.contBytes === 0) {
+        if (input < 0x80) {
+          state.value = 0;
+          return new Unicode.CodePoint(input);
+        } else if ((input & 0xE0) === 0xC0) {
+          state.value = (input & 0x1F);
+          state.contBytes = 1;
+        } else if ((input & 0xF0) === 0xE0)) {
+          state.value = (input & 0x0F);
+          state.contBytes = 2;
+        } else if ((input & 0xF8) === 0xF0) {
+          state.value = (input & 0x07);
+          state.contBytes = 3;
+        } else {
+          // Invalid byte, return Replacement Character
+          return new Unicode.CodePoint(0xFFFD);
+        }
+      } else {
+        if ((input & 0xC0) !== 0x80) {
+          // Invalid byte, return Replacement Character
+          state.contBytes = 0;
+          return new Unicode.CodePoint(0xFFFD);
+        }
+        state.value <<= 6;
+        state.value |= (input & 0x3F);
+        --state.contBytes;
+      }
     } catch (e) {
       ErrorLog.rethrow({
-        functionName: "utf8decode",
+        functionName: "asyncUtf8Decode",
         error: e,
       });
+    }
+  }
+  class Processor {
+    #inputPushSink;
+    #outputPushSource;
+    #cycle;
+    #state;
+    constructor(args) {
+      try {
+        if (!(Types.isSimpleObject(args))) {
+          throw "Argument must be a simple object.";
+        }
+        if (!(Object.hasOwn(args, "cycle"))) {
+          throw "Argument \"cycle\" must be provided.";
+        }
+        this.#cycle = args.cycle;
+        if (Object.hasOwn(args, "init")) {
+          this.#init(args.init);
+        } else {
+          this.#state = {};
+        }
+        this.#inputPushSink = new Streams.PushSink({
+          push: this.#execute,
+        });
+        this.#outputPushSource = new Streams.PushSource();
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "Processor constructor",
+          error: e,
+        });
+      }
+    }
+    async #init(init) {
+      try {
+        this.#state = await init();
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "Processor.#init",
+          error: e,
+        });
+      }
+    }
+    async #execute(input) {
+      try {
+        let output = await this.#cycle(input, this.#state);
+        this.#outputPushSource.execute(output);
+        while (output !== null) {
+          output = await this.#cycle(null, this.#state);
+          this.#outputPushSource.execute(output);
+        }
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "Processor.#execute",
+          error: e,
+        });
+      }
+    }
+    getInputPusher() {
+      try {
+        return this.#inputPushSink.getPusher();
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "Processor.getInputPusher",
+          error: e,
+        });
+      }
+    }
+    registerOutputSink(args) {
+      try {
+        this.#outputPushSource.registerSink(args);
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "Processor.registerOutputSink",
+          error: e,
+        });
+      }
+    }
+    unregisterOutputSink(args) {
+      try {
+        this.#outputPushSource.unregisterSink(args);
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "Processor.unregisterOutputSink",
+          error: e,
+        });
+      }
     }
   }
   try {
@@ -120,52 +200,33 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
     imgBird.style.width = "200px";
     document.body.appendChild(imgBird);
     document.body.appendChild(document.createElement("br"));
-    const underlyingSource = {
-      start: function (controller) {
-        return;
+    const utf8Decoder = new Processor({
+      init: asyncUft8DecoderInit,
+      cycle: asyncUft8Decoder,
+    });
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    document.body.appendChild(fileInput);
+    const textOutput = document.createElement("textarea");
+    document.body.appendChild(textOutput);
+    const textSink = new Streams.PushSink({
+      push: function (item) {
+        textOutput.value += item.toString();
       },
-      pull: function (controller) {
-        const item = Math.random();
-        controller.enqueue(item);
-        return;
-      },
-      cancel: function (reason) {
-        return;
-      },
-    };
-    const readQueuingStrategy = {
-      highWaterMark: 1,
-      size: function (chunk) {
-        return 1;
-      }
-    };
-    const readableStream = new self.ReadableStream(underlyingSource, readQueuingStrategy);
-    const readableStreamSource = new Streams.ReadableStreamSource(readableStream);
-    const underlyingSink = {
-      start: function (controller) {
-      },
-      write: function (chunk, controller) {
-        console.log(chunk);
-      },
-      close: function (controller) {
-      },
-      abort: function (reason) {
-      },
-    };
-    const writeQueuingStrategy = {
-      highWaterMark: 1,
-    }
-    const writableStream = new self.WritableStream(underlyingSink, writeQueuingStrategy);
-    const writableStreamSink = new Streams.WritableStreamSink(writableStream);
-    const pump = new Streams.Pump();
-    pump.setSource(readableStreamSource);
-    pump.registerSink(writableStreamSink);
-    (function execute() {
-      const start = performance.now();
-      pump.execute();
-      const end = performance.now();
-      setTimeout(execute, 0);
-    })();
+    });
+    fileInput.addEventListener("input", function (evt) {
+      const file = evt.target.files[0];
+      const readableStream = file.stream();
+      const readableStreamSource = new Streams.ReadableStreamSource(readableStream);
+      const pump = new Streams.Pump();
+      pump.setSource(readableStreamSource);
+      pump.registerSink(utf8Decoder);
+      utf8Decoder.registerSink(textSink);
+      (function execute() {
+        pump.execute();
+        self.setTimeout(execute, 0);
+      })();
+    });
   } catch (e) {
     ErrorLog.rethrow({
       functionName: "start",
