@@ -68,6 +68,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
   }
   async function asyncUtf8Decode(input, state) {
     try {
+      console.log(input);
       if (input === null) {
         return null;
       }
