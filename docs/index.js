@@ -173,7 +173,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
         });
       }
     }
-    registerOutputSink(args) {
+    registerSink(args) {
       try {
         this.#outputPushSource.registerSink(args);
       } catch (e) {
@@ -183,7 +183,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
         });
       }
     }
-    unregisterOutputSink(args) {
+    unregisterSink(args) {
       try {
         this.#outputPushSource.unregisterSink(args);
       } catch (e) {
