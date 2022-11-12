@@ -163,7 +163,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
         });
       }
     }
-    getInputPusher() {
+    getPusher() {
       try {
         return this.#inputPushSink.getPusher();
       } catch (e) {
