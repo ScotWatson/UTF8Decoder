@@ -81,7 +81,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
         } else if ((input & 0xE0) === 0xC0) {
           state.value = (input & 0x1F);
           state.contBytes = 1;
-        } else if ((input & 0xF0) === 0xE0)) {
+        } else if ((input & 0xF0) === 0xE0) {
           state.value = (input & 0x0F);
           state.contBytes = 2;
         } else if ((input & 0xF8) === 0xF0) {
