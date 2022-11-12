@@ -201,8 +201,8 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
     document.body.appendChild(imgBird);
     document.body.appendChild(document.createElement("br"));
     const utf8Decoder = new Processor({
-      init: asyncUft8DecoderInit,
-      cycle: asyncUft8Decoder,
+      init: asyncUtf8DecoderInit,
+      cycle: asyncUtf8Decoder,
     });
     const fileInput = document.createElement("input");
     fileInput.type = "file";
