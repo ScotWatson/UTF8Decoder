@@ -60,32 +60,43 @@ const asyncUnicode = (async function () {
 
 
 async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
-  async function asyncUint8BufferInit() {
-    return {};
-  }
-  function asyncUint8Buffer(input, state) {
-    if (input === null) {
-      return null;
+  const utf8SequencerInit = {
+    currentView: null,
+  };
+  function utf8Sequencer(input, state) {
+    if (input !== null) {
+      if (!(input instanceof Memory.View)) {
+        throw "input must be a Memory.View.";
+      }
+      state.currentView = input;
     }
-    if (input.constructor !== Uint8Array) {
-      throw "input must be a Uint8Array.";
-    }
-    
+    const thisView = state.currentView.createSlice({
+      byteOffset: 0,
+      byteLength: 1,
+    });
+    const value = new Memory.Uint8({
+      memoryView: thisView,
+    });
+    state.currentView = state.currentView.createSlice({
+      byteOffset: 1,
+    });
+    return value.valueOf();
   }
-  async function asyncUtf8DecodeInit() {
-    return {
-      value: 0,
-      contBytes: 0,
-    };
-  }
-  function asyncUtf8Decode(input, state) {
+  const utf8DecodeInit = {
+    value: 0,
+    contBytes: 0,
+  };
+  function utf8Decode(input, state) {
     try {
       if (input === null) {
+        if (currentView
         return null;
       }
-      if (!(Types.isInteger(input))) {
-        throw "input must be an integer.";
+      if (!(input instanceof Memory.View)) {
+        throw "input must be a Memory.View.";
       }
+      state.currentView = input;
+      
       if (state.contBytes === 0) {
         if (input < 0x80) {
           state.value = 0;
@@ -115,73 +126,14 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
       }
     } catch (e) {
       ErrorLog.rethrow({
-        functionName: "asyncUtf8Decode",
+        functionName: "utf8Decode",
         error: e,
       });
     }
   }
-  class FunctionPushSource {
-    #outputPushSource;
-    #asyncPull;
-    #staticStart;
-    constructor() {
-      try {
-        this.#outputPushSource = new Streams.PushSource();
-        this.#staticStart = Types.createStaticFunc(this, this.start);
-        this.#asyncPull = args.asyncPull;
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "AsyncPump constructor",
-          error: e,
-        });
-      }
-    }
-    registerSink(args) {
-      try {
-        this.#pushSource.registerSink(args);
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "AsyncPump.registerSink",
-          error: e,
-        });
-      }
-    }
-    unregisterSink(args) {
-      try {
-        this.#pushSource.unregisterSink(args);
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "AsyncPump.unregisterSink",
-          error: e,
-        });
-      }
-    }
-    start() {
-      try {
-        const staticStart = this.#staticStart;
-        let output = this.#asyncPull();
-        this.#outputPushSource.execute(output);
-        self.setTimeout(function () {
-          staticStart();
-        }, 0);
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "AsyncPump.start",
-          error: e,
-        });
-      }
-    }
-  }
-  class Processor {
-  };
-  class Processor {
-  };
-  class Processor {
-  };
-  class Processor {
+  class PassiveTransform {
     #inputPushSink;
-    #outputPushSource;
-    #staticExecute;
+    #outputPushSourceController;
     #cycle;
     #state;
     constructor(args) {
@@ -193,95 +145,112 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
           throw "Argument \"cycle\" must be provided.";
         }
         this.#cycle = args.cycle;
-        if (Object.hasOwn(args, "init")) {
-          this.#init(args.init);
+        if (Object.hasOwn(args, "initState")) {
+          this.#state = args.initState;
         } else {
           this.#state = {};
         }
-        this.#staticExecute = Types.createStaticAsyncFunc(this, this.#execute);
         this.#inputPushSink = new Streams.PushSink({
           push: this.#execFunc,
         });
-        this.#outputPushSource = new Streams.PushSource();
+        this.#outputPushSourceController = new Streams.PushSourceController();
       } catch (e) {
         ErrorLog.rethrow({
-          functionName: "Processor constructor",
+          functionName: "PassiveTransform constructor",
           error: e,
         });
       }
     }
-    async #init(init) {
+    get input() {
+      return this.#inputPushSink;
+    }
+    get output() {
+      return this.#outputPushSourceController.source;
+    }
+    #execute(input) {
       try {
-        this.#state = await init();
+        let output;
+        while (output !== null) {
+          output = this.#cycle(null, this.#state);
+          this.#outputPushSourceController.execute({
+            item: output,
+          });
+        }
+        output = this.#cycle(input, this.#state);
+        this.#outputPushSourceController.execute({
+          item: output,
+        });
       } catch (e) {
         ErrorLog.rethrow({
-          functionName: "Processor.#init",
+          functionName: "PassiveTransform.#execute",
           error: e,
         });
       }
     }
-    async #execute(input) {
+  };
+  class LazyTransform {
+    #inputPullSinkController;
+    #outputPullSource;
+    #cycle;
+    #state;
+    constructor(args) {
       try {
-        const staticExecute = this.#staticExecute;
+        if (!(Types.isSimpleObject(args))) {
+          throw "Argument must be a simple object.";
+        }
+        if (!(Object.hasOwn(args, "cycle"))) {
+          throw "Argument \"cycle\" must be provided.";
+        }
+        this.#cycle = args.cycle;
+        if (Object.hasOwn(args, "initState")) {
+          this.#state = args.initState;
+        } else {
+          this.#state = {};
+        }
+        this.#inputPullSinkController = new Streams.PullSinkController();
+        this.#outputPullSource = new Streams.PullSource({
+          pull: this.#execFunc,
+        });
+      } catch (e) {
+        ErrorLog.rethrow({
+          functionName: "LazyTransform constructor",
+          error: e,
+        });
+      }
+    }
+    get input() {
+      return this.#inputPullSinkController.sink;
+    }
+    get output() {
+      return this.#outputPullSource;
+    }
+    #execute() {
+      try {
         let output = this.#cycle(null, this.#state);
         if (output !== null) {
-          this.#outputPushSource.execute(output);
-          self.setTimeout(function () {
-            staticExecute(input);
-          }, 0);
+          return output;
         } else {
+          const input = this.#inputPullSinkController.execute();
           output = this.#cycle(input, this.#state);
-          if (output !== null) {
-            this.#outputPushSource.execute(output);
-          }
+          return output;
         }
       } catch (e) {
         ErrorLog.rethrow({
-          functionName: "Processor.#execute",
+          functionName: "LazyTransform.#execute",
           error: e,
         });
       }
     }
-    getPusher() {
-      try {
-        return this.#inputPushSink.getPusher();
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "Processor.getInputPusher",
-          error: e,
-        });
-      }
-    }
-    registerSink(args) {
-      try {
-        this.#outputPushSource.registerSink(args);
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "Processor.registerOutputSink",
-          error: e,
-        });
-      }
-    }
-    unregisterSink(args) {
-      try {
-        this.#outputPushSource.unregisterSink(args);
-      } catch (e) {
-        ErrorLog.rethrow({
-          functionName: "Processor.unregisterOutputSink",
-          error: e,
-        });
-      }
-    }
-  }
+  };
   try {
     const imgBird = document.createElement("img");
     imgBird.src = "FlappingBird.gif";
     imgBird.style.width = "200px";
     document.body.appendChild(imgBird);
     document.body.appendChild(document.createElement("br"));
-    const utf8Decoder = new Processor({
-      init: asyncUtf8DecodeInit,
-      cycle: asyncUtf8Decode,
+    const utf8Decoder = new PassiveTransform({
+      initState: utf8DecodeInit,
+      cycle: utf8Decode,
     });
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -296,13 +265,14 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
     fileInput.addEventListener("input", function (evt) {
       const file = evt.target.files[0];
       const readableStream = file.stream();
-      const readableStreamSource = new Streams.ReadableStreamSource(readableStream);
-      const pump = new Streams.Pump();
-      pump.setSource(readableStreamSource);
-      pump.registerSink(utf8Decoder);
-      utf8Decoder.registerSink(textSink);
+      const readableStreamSourceController = new Streams.ReadableByteStreamPushSourceController({
+        readableStream: readableStream,
+        chunkSize: 128,
+      });
+      readableStreamSourceController.source.registerSink(utf8Decoder.input);
+      utf8Decoder.output.registerSink(textSink);
       (function execute() {
-        pump.execute();
+        readableStreamSourceController.execute();
         self.setTimeout(execute, 0);
       })();
     });
