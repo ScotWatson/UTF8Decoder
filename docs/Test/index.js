@@ -88,7 +88,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
       });
       let inputIndex = 0;
       while (inputIndex < inputArray.length) {
-        const byteValue = inputArray.at(inputIndex);
+        const byteValue = inputArray.at(inputIndex).valueOf();
         if (state.contBytes === 0) {
           if (byteValue < 0x80) {
             state.value = 0;
