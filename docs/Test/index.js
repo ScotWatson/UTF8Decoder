@@ -58,9 +58,18 @@ const asyncTasks = (async function () {
   }
 })();
 
+const asyncMemory = (async function () {
+  try {
+    const module = await import("https://scotwatson.github.io/Memory/Test/Memory.mjs");
+    return module;
+  } catch (e) {
+    console.error(e);
+  }
+})();
+
 (async function () {
   try {
-    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode, asyncTasks ] );
+    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode, asyncTasks, asyncMemory ] );
     start(modules);
   } catch (e) {
     console.error(e);
@@ -68,7 +77,7 @@ const asyncTasks = (async function () {
 })();
 
 
-async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) {
+async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory ] ) {
   const utf8DecodeInit = {
     value: 0,
     contBytes: 0,
