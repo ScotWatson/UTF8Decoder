@@ -99,7 +99,10 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     try {
       if (inputView !== null) {
         // inputView is a Memory.View
-        if (state.inputView !== null) {
+        if (state.inputView === null) {
+          state.inputView = inputView;
+          state.inputIndex = 0;
+        } else {
           const oldDataView = state.inputView.createSlice({
             byteOffset: state.inputIndex,
           });
@@ -122,7 +125,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       if (state.inputView === null) {
         return null;
       }
-      console.log(state.inputView);
       const inputArray = new Memory.DataArray({
         memoryView: state.inputView,
         ElementClass: Memory.Uint8,
