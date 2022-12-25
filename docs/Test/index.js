@@ -81,23 +81,46 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) 
       } else {
         ret.inputView = null;
       }
+      if (!("state" in args)) {
+        throw "Argument \"state\" must be provided.";
+      }
       ret.state = args.state;
       return ret;
     })();
     try {
-      if (inputView === null) {
+      if (inputView !== null) {
+        if (!(inputView instanceof Memory.View)) {
+          throw "Argument \"input\" must be a Memory.View.";
+        }
+        if (state.inputView !== null) {
+          const oldDataView = state.inputView.createSlice({
+            byteOffset: state.inputIndex,
+          });
+          const newInputBlock = new Memory.Block({
+            byteLength: oldDataView.byteLength + inputView.byteLength,
+          });
+          state.inputView = new Memory.View(newInputBlock);
+          const oldDataDest = state.inputView.createSlice({
+            byteOffset: 0,
+            byteLength: oldDataView.byteLength,
+          });
+          const newDataDest = state.inputView.createSlice({
+            byteOffset: oldDataView.byteLength,
+          });
+          oldDataDest.set(oldDataView);
+          newDataDest.set(inputView);
+          state.inputIndex = 0;
+        }
+      }
+      if (state.inputView === null) {
         return null;
       }
-      if (!(inputView instanceof Memory.View)) {
-        throw "input must be a Memory.View.";
-      }
       const inputArray = new Memory.DataArray({
-        memoryView: inputView,
+        memoryView: state.inputView,
         ElementClass: Memory.Uint8,
       });
-      let inputIndex = 0;
-      while (inputIndex < inputArray.length) {
-        const byteValue = inputArray.at(inputIndex).valueOf();
+      while (state.inputIndex < inputArray.length) {
+        const byteValue = inputArray.at(state.inputIndex).valueOf();
         if (state.contBytes === 0) {
           if (byteValue < 0x80) {
             state.value = 0;
@@ -124,8 +147,14 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) 
           state.value <<= 6;
           state.value |= (byteValue & 0x3F);
           --state.contBytes;
+          if (state.contBytes === 0) {
+            return new Unicode.CodePoint(state.value);
+          }
         }
       }
+      state.inputIndex = 0;
+      state.inputView = null;
+      return null;
     } catch (e) {
       ErrorLog.rethrow({
         functionName: "utf8Decode",
@@ -158,7 +187,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) 
       const readableStream = file.stream();
       const readableStreamPushSource = new Streams.ReadableByteStreamPushSource({
         readableStream: readableStream,
-        chunkSize: 128,
+        chunkByteLength: 128,
       });
       readableStreamPushSource.connectOutput(utf8Decoder.inputCallback);
       utf8Decoder.connectOutput(textSink);
