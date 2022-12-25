@@ -98,9 +98,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     })();
     try {
       if (inputView !== null) {
-        if (!(inputView instanceof Memory.View)) {
-          throw "Argument \"input\" must be a Memory.View.";
-        }
+        // inputView is a Memory.View
         if (state.inputView !== null) {
           const oldDataView = state.inputView.createSlice({
             byteOffset: state.inputIndex,
@@ -124,6 +122,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       if (state.inputView === null) {
         return null;
       }
+      console.log(state.inputView);
       const inputArray = new Memory.DataArray({
         memoryView: state.inputView,
         ElementClass: Memory.Uint8,
