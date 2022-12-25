@@ -81,6 +81,8 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
   const utf8DecodeInit = {
     value: 0,
     contBytes: 0,
+    inputView: null,
+    inputIndex: 0,
   };
   function utf8Decode(args) {
     const { inputView, state } = (function () {
