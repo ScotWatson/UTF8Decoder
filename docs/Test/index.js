@@ -134,6 +134,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       while (state.inputIndex < inputArray.length) {
         const byteValue = inputArray.at(state.inputIndex).valueOf();
+        ++state.inputIndex;
         if (state.contBytes === 0) {
           if (byteValue < 0x80) {
             state.value = 0;
