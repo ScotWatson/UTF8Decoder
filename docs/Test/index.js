@@ -190,7 +190,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) 
         chunkByteLength: 128,
       });
       readableStreamPushSource.connectOutput(utf8Decoder.inputCallback);
-      utf8Decoder.connectOutput(textSink);
+      utf8Decoder.connectOutput(textSink.callback);
     });
   } catch (e) {
     ErrorLog.rethrow({
