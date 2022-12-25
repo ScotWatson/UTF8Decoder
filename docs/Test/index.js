@@ -101,6 +101,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     try {
       if (inputView !== null) {
         // inputView is a Memory.View
+        console.log("pulse");
         if (state.inputView === null) {
           state.inputView = inputView;
           state.inputIndex = 0;
@@ -199,7 +200,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       const readableStream = file.stream();
       const readableStreamPushSource = new Streams.ReadableByteStreamPushSource({
         readableStream: readableStream,
-        chunkByteLength: 128,
+        chunkByteLength: 0x200,
       });
       readableStreamPushSource.connectOutput(utf8Decoder.inputCallback);
       utf8Decoder.connectOutput(textSink.callback);
