@@ -49,9 +49,18 @@ const asyncUnicode = (async function () {
   }
 })();
 
+const asyncTasks = (async function () {
+  try {
+    const module = await import("https://scotwatson.github.io/Tasks/Test/Tasks.mjs");
+    return module;
+  } catch (e) {
+    console.error(e);
+  }
+})();
+
 (async function () {
   try {
-    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode ] );
+    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode, asyncTasks ] );
     start(modules);
   } catch (e) {
     console.error(e);
@@ -59,7 +68,7 @@ const asyncUnicode = (async function () {
 })();
 
 
-async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode ] ) {
+async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) {
   const utf8DecodeInit = {
     value: 0,
     contBytes: 0,
