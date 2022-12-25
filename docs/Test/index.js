@@ -128,6 +128,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         return null;
       }
       console.log(state.inputView);
+      console.log("inputIndex: " + state.inputIndex);
       const inputArray = new Memory.DataArray({
         memoryView: state.inputView,
         ElementClass: Memory.Uint8,
