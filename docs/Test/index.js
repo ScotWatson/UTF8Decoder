@@ -156,16 +156,12 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks ] ) 
     fileInput.addEventListener("input", function (evt) {
       const file = evt.target.files[0];
       const readableStream = file.stream();
-      const readableStreamSourceController = new Streams.ReadableByteStreamPushSource({
+      const readableStreamPushSource = new Streams.ReadableByteStreamPushSource({
         readableStream: readableStream,
         chunkSize: 128,
       });
-      readableStreamSourceController.connectOutput(utf8Decoder.inputCallback);
+      readableStreamPushSource.connectOutput(utf8Decoder.inputCallback);
       utf8Decoder.connectOutput(textSink);
-      (function execute() {
-        readableStreamSourceController.execute();
-        self.setTimeout(execute, 0);
-      })();
     });
   } catch (e) {
     ErrorLog.rethrow({
