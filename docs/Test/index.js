@@ -101,7 +101,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     try {
       if (inputView !== null) {
         // inputView is a Memory.View
-        console.log("pulse");
         if (state.inputView === null) {
           state.inputView = inputView;
           state.inputIndex = 0;
@@ -176,6 +175,76 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     } catch (e) {
       ErrorLog.rethrow({
         functionName: "utf8Decode",
+        error: e,
+      });
+    }
+  }
+  const utf8EncodeInit = {
+    holdBytes: [],
+  };
+  function utf8Encode(args) {
+    try {
+      const { inputItem, outputView, state } = (function () {
+        let ret = {};
+        if ("input" in args) {
+          ret.inputItem = args.input;
+        } else {
+          ret.inputItem = null;
+        }
+        if ("output" in args) {
+          throw "Argument \"output\" must be provided.";
+        }
+        ret.outputView = args.output;
+        if (!("state" in args)) {
+          throw "Argument \"state\" must be provided.";
+        }
+        ret.state = args.state;
+        return ret;
+      })();
+      const outputArray = new Memory.DataArray({
+        memoryView: outputView,
+        ElementClass: Memory.Uint8,
+      });
+      let bytesWritten = 0;
+      function writeByte(value) {
+        if (bytesWritten < outputArray.length) {
+          outputArray.at(bytesWritten).set(value);
+          ++bytesWritten;
+        } else {
+          state.holdBytes.push(value);
+        }
+      }
+      while ((state.holdBytes.length !== 0) && (bytesWritten <= outputArray.length)) {
+        outputArray.at(bytesWritten).set(state.holdBytes.shift());
+        ++bytesWritten;
+      }
+      if (inputItem !== null) {
+        // inputItem is a Unicode.CodePoint
+        const codePoint = inputItem.valueOf();
+        if (codePoint & 0xFFFF80 === 0) {
+          // Use 1 byte to encode 7 bits
+          writeByte(codePoint);
+        } else if ((codePoint & 0xFFF800) === 0) {
+          // Use 2 bytes to encode 11 bits
+          writeByte((codePoint >> 6) | 0xC0);
+          writeByte((codePoint & 0x3F) | 0x80);
+        } else if ((codePoint & 0xFF0000) === 0) {
+          // Use 3 bytes to encode 16 bits
+          writeByte((codePoint >> 12) | 0xE0);
+          writeByte(((codePoint >> 6) & 0x3F) | 0x80);
+          writeByte((codePoint & 0x3F) | 0x80);
+        } else {
+          // Use 4 bytes to encode 21 bits
+          writeByte((codePoint >> 18) | 0xF0);
+          writeByte(((codePoint >> 12) & 0x3F) | 0x80);
+          writeByte(((codePoint >> 6) & 0x3F) | 0x80);
+          writeByte((codePoint & 0x3F) | 0x80);
+        }
+      }
+      return bytesWritten;
+    } catch (e) {
+      ErrorLog.rethrow({
+        functionName: "utf8Encode",
         error: e,
       });
     }
