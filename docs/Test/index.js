@@ -200,14 +200,14 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     document.body.appendChild(textOutput);
     let str = "";
     let byteRate;
-    let lineLength = 1;
+    let lineLength = 4;
     let p = document.createElement("p");
     document.body.appendChild(p);
     const textSinkCallback = new Tasks.Callback({
       invoke: function (item) {
         const startTime = performance.now();
         p.innerHTML += item.toString();
-        if (p.innerHTML >= lineLength) {
+        if (p.innerHTML.length >= lineLength) {
           p = document.createElement("p");
           document.body.appendChild(p);
         }
