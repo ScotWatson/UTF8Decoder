@@ -203,7 +203,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     let lineLength = 4;
     let container = document.createElement("div");
     setTimeout(function () {
-      document.body.appendChild(container);
     }, 20000);
     let p = document.createElement("p");
     container.appendChild(p);
@@ -221,6 +220,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     });
     const doneCallback = new Tasks.Callback({
       invoke: function () {
+        document.body.appendChild(container);
         console.log("done");
       }
     });
@@ -231,6 +231,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         blob: file,
         outputByteRate: byteRate,
       });
+      fileChunkPushSource.eofSignal.add(doneCallback);
       fileChunkPushSource.connectOutput(utf8Decoder.inputCallback);
     });
     utf8Decoder.connectOutput(textSinkCallback);
