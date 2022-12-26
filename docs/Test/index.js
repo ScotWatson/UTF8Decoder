@@ -195,12 +195,17 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     document.body.appendChild(fileInput);
     const textOutput = document.createElement("textarea");
     document.body.appendChild(textOutput);
+    let str = "";
     const textSink = new Tasks.CallbackController({
       invoke: function (item) {
         const startTime = performance.now();
-        textOutput.value += item.toString();
+        str += item.toString();
+        if (str.length === 40) {
+          textOutput.value += str;
+          str = "";
+        }
         const endTime = performance.now();
-        console.log(endTime - startTime);
+//        console.log(endTime - startTime);
       },
     });
     fileInput.addEventListener("input", function (evt) {
