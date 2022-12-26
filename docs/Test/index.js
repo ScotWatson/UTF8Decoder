@@ -201,15 +201,19 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     let str = "";
     let byteRate;
     let lineLength = 4;
+    let container = document.createElement("div");
+    setTimeout(function () {
+      document.body.appendChild(container);
+    }, 20000);
     let p = document.createElement("p");
-    document.body.appendChild(p);
+    container.appendChild(p);
     const textSinkCallback = new Tasks.Callback({
       invoke: function (item) {
         const startTime = performance.now();
         p.innerHTML += item.toString();
         if (p.innerHTML.length >= lineLength) {
           p = document.createElement("p");
-          document.body.appendChild(p);
+          container.appendChild(p);
         }
         const endTime = performance.now();
 //        console.log(endTime - startTime);
