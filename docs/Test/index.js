@@ -193,14 +193,22 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     document.body.appendChild(fileInput);
+    const inpByteRate = document.createElement("input");
+    inpByteRate.type = "number";
+    document.body.appendChild(inpByteRate);
+    const inpLineLength = document.createElement("input");
+    inpLineLength.type = "number";
+    document.body.appendChild(inpLineLength);
     const textOutput = document.createElement("textarea");
     document.body.appendChild(textOutput);
     let str = "";
-    const textSink = new Tasks.CallbackController({
+    let byteRate;
+    let lineLength;
+    const textSinkCallback = new Tasks.Callback({
       invoke: function (item) {
         const startTime = performance.now();
         str += item.toString();
-        if (str.length === 40) {
+        if (str.length === lineLength) {
           textOutput.value += str;
           str = "";
         }
@@ -208,15 +216,22 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
 //        console.log(endTime - startTime);
       },
     });
+    const doneCallback = new Tasks.Callback({
+      invoke: function () {
+        console.log("done");
+      }
+    });
     fileInput.addEventListener("input", function (evt) {
+      byteRate = parseInt(inpByteRate.value);
+      lineLength = parseInt(inpLineLength.value);
       const file = evt.target.files[0];
       const fileChunkPushSource = new Streams.BlobChunkPushSource({
         blob: file,
-        outputByteRate: 0x200,
+        outputByteRate: byteRate,
       });
       fileChunkPushSource.connectOutput(utf8Decoder.inputCallback);
     });
-    utf8Decoder.connectOutput(textSink.callback);
+    utf8Decoder.connectOutput(textSinkCallback);
   } catch (e) {
     ErrorLog.rethrow({
       functionName: "start",
