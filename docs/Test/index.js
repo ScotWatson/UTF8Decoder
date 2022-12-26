@@ -196,14 +196,11 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     const inpByteRate = document.createElement("input");
     inpByteRate.type = "number";
     document.body.appendChild(inpByteRate);
-    const inpLineLength = document.createElement("input");
-    inpLineLength.type = "number";
-    document.body.appendChild(inpLineLength);
     const textOutput = document.createElement("textarea");
     document.body.appendChild(textOutput);
     let str = "";
     let byteRate;
-    let lineLength;
+    let lineLength = 1;
     const textSinkCallback = new Tasks.Callback({
       invoke: function (item) {
         const startTime = performance.now();
@@ -223,7 +220,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     });
     fileInput.addEventListener("input", function (evt) {
       byteRate = parseInt(inpByteRate.value);
-      lineLength = parseInt(inpLineLength.value);
       const file = evt.target.files[0];
       const fileChunkPushSource = new Streams.BlobChunkPushSource({
         blob: file,
