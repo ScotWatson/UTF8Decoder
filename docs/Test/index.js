@@ -205,7 +205,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       invoke: function (item) {
         const startTime = performance.now();
         str += item.toString();
-        if (str.length === lineLength) {
+        if (str.length >= lineLength) {
           textOutput.value += str;
           str = "";
         }
