@@ -162,7 +162,11 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
           state.value |= (byteValue & 0x3F);
           --state.contBytes;
           if (state.contBytes === 0) {
-            return new Unicode.CodePoint(state.value);
+            if (value > 0x10FFFF) {
+              return new Unicode.CodePoint(0xFFFD);
+            } else {
+              return new Unicode.CodePoint(state.value);
+            }
           }
         }
       }
