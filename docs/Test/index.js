@@ -197,7 +197,10 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     document.body.appendChild(textOutput);
     const textSink = new Tasks.CallbackController({
       invoke: function (item) {
+        const startTime = performance.now();
         textOutput.value += item.toString();
+        const endTime = performance.now();
+        console.log(endTime - startTime);
       },
     });
     fileInput.addEventListener("input", function (evt) {
