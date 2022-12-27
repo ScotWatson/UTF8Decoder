@@ -310,6 +310,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       init: utf8EncodeInit,
       transform: utf8Encode,
       flush: utf8EncodeFlush,
+      outputByteRate: 5,
     });
     utf8Encoder.connectOutput(outputByteSequence.inputCallback);
     const utf8Decoder = new Streams.PassiveTransform({
