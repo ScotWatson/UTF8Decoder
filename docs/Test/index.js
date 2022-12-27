@@ -111,6 +111,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     })();
     try {
       if (inputView !== null) {
+        console.log("pulse");
         // inputView is a Memory.View
         if (state.inputView === null) {
           state.inputView = inputView;
@@ -322,7 +323,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     const doneCallback = new Tasks.Callback({
       invoke: function () {
         const outputView = outputByteSequence.createView();
-        const outputBlob = new Blob( [ outputView.toArrayBuffer() ] );
+        const outputBlob = new Blob( [ outputView.toUint8Array() ] );
         const outputURL = URL.createObjectURL(outputBlob);
         const a = document.createElement("a");
         a.display = "none";
