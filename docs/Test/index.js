@@ -321,6 +321,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     utf8Decoder.connectOutput(utf8Encoder.inputCallback);
     const doneCallback = new Tasks.Callback({
       invoke: function () {
+        console.log("utf8Encoder flushed");
         const outputView = outputByteSequence.createView();
         const outputBlob = new Blob( [ outputView.toUint8Array() ] );
         const outputURL = URL.createObjectURL(outputBlob);
@@ -336,7 +337,10 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     });
 
     utf8Decoder.flushedSignal.add(new Tasks.Callback({
-      invoke: utf8Encoder.flush,
+      invoke: function () {
+        console.log("utf8Decoder flushed");
+        utf8Encoder.flush();
+      },
     }));
     utf8Encoder.flushedSignal.add(doneCallback);
 
