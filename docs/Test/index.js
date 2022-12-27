@@ -244,8 +244,10 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         ++bytesWritten;
       }
       if (inputItem !== null) {
+        console.log(inputItem);
         // inputItem is a Unicode.CodePoint
         const codePoint = inputItem.valueOf();
+        console.log(codePoint);
         if (codePoint & 0xFFFF80 === 0) {
           // Use 1 byte to encode 7 bits
           writeByte(codePoint);
