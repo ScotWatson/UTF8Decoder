@@ -232,6 +232,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       let bytesWritten = 0;
       function writeByte(value) {
+        console.log(value.toString(16))
         if (bytesWritten < outputArray.length) {
           outputArray.at(bytesWritten).set(value);
           ++bytesWritten;
@@ -247,7 +248,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         console.log(inputItem);
         // inputItem is a Unicode.CodePoint
         const codePoint = inputItem.valueOf();
-        console.log(codePoint);
+        console.log(codePoint.toString(16));
         if (codePoint & 0xFFFF80 === 0) {
           // Use 1 byte to encode 7 bits
           writeByte(codePoint);
