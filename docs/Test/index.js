@@ -67,9 +67,18 @@ const asyncMemory = (async function () {
   }
 })();
 
+const asyncSequence = (async function () {
+  try {
+    const module = await import("https://scotwatson.github.io/Containers/Test/Sequence.mjs");
+    return module;
+  } catch (e) {
+    console.error(e);
+  }
+})();
+
 (async function () {
   try {
-    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode, asyncTasks, asyncMemory ] );
+    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode, asyncTasks, asyncMemory, asyncSequence ] );
     start(modules);
   } catch (e) {
     console.error(e);
@@ -77,7 +86,7 @@ const asyncMemory = (async function () {
 })();
 
 
-async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory ] ) {
+async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory, Sequence ] ) {
   function utf8DecodeInit() {
     const state = {};
     state.value: 0;
@@ -181,8 +190,16 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
     }
   }
-  function utf8DecodeFlush() {
-    return;
+  function utf8DecodeFlush(args) {
+    const { state } = (function () {
+      let ret = {};
+      if (!("state" in args)) {
+        throw "Argument \"state\" must be provided.";
+      }
+      ret.state = args.state;
+      return ret;
+    })();
+    return null;
   };
   function utf8EncodeInit() {
     const state = {};
@@ -257,7 +274,19 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     }
   }
   function utf8EncodeFlush() {
-    return;
+    const { outputView, state } = (function () {
+      let ret = {};
+      if (!("output" in args)) {
+        throw "Argument \"output\" must be provided.";
+      }
+      ret.outputView = args.output;
+      if (!("state" in args)) {
+        throw "Argument \"state\" must be provided.";
+      }
+      ret.state = args.state;
+      return ret;
+    })();
+    return 0;
   };
   try {
     const imgBird = document.createElement("img");
