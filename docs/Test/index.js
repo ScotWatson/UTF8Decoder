@@ -232,6 +232,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       let bytesWritten = 0;
       function writeByte(value) {
+        console.log("writeByte");
         if (bytesWritten < outputArray.length) {
           outputArray.at(bytesWritten).set(value);
           ++bytesWritten;
