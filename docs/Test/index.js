@@ -215,7 +215,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         } else {
           ret.inputItem = null;
         }
-        if ("output" in args) {
+        if (!("output" in args)) {
           throw "Argument \"output\" must be provided.";
         }
         ret.outputView = args.output;
@@ -273,7 +273,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
     }
   }
-  function utf8EncodeFlush() {
+  function utf8EncodeFlush(args) {
     const { outputView, state } = (function () {
       let ret = {};
       if (!("output" in args)) {
