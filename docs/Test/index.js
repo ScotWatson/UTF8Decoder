@@ -89,10 +89,10 @@ const asyncSequence = (async function () {
 async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory, Sequence ] ) {
   function utf8DecodeInit() {
     const state = {};
-    state.value: 0;
-    state.contBytes: 0;
-    state.inputView: null;
-    state.inputIndex: 0;
+    state.value = 0;
+    state.contBytes = 0;
+    state.inputView = null;
+    state.inputIndex = 0;
     return state;
   }
   function utf8Decode(args) {
@@ -203,7 +203,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
   };
   function utf8EncodeInit() {
     const state = {};
-    state.holdBytes: [];
+    state.holdBytes = [];
     return state;
   };
   function utf8Encode(args) {
