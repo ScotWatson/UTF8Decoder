@@ -78,12 +78,14 @@ const asyncMemory = (async function () {
 
 
 async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory ] ) {
-  const utf8DecodeInit = {
-    value: 0,
-    contBytes: 0,
-    inputView: null,
-    inputIndex: 0,
-  };
+  function utf8DecodeInit() {
+    const state = {};
+    state.value: 0;
+    state.contBytes: 0;
+    state.inputView: null;
+    state.inputIndex: 0;
+    return state;
+  }
   function utf8Decode(args) {
     const { inputView, state } = (function () {
       let ret = {};
@@ -179,8 +181,13 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
     }
   }
-  const utf8EncodeInit = {
-    holdBytes: [],
+  function utf8DecodeFlush() {
+    return;
+  };
+  function utf8EncodeInit() {
+    const state = {};
+    state.holdBytes: [];
+    return state;
   };
   function utf8Encode(args) {
     try {
@@ -249,16 +256,15 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
     }
   }
+  function utf8EncodeFlush() {
+    return;
+  };
   try {
     const imgBird = document.createElement("img");
     imgBird.src = "FlappingBird.gif";
     imgBird.style.width = "200px";
     document.body.appendChild(imgBird);
     document.body.appendChild(document.createElement("br"));
-    const utf8Decoder = new Streams.PassiveTransform({
-      transform: utf8Decode,
-      state: utf8DecodeInit,
-    });
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     document.body.appendChild(fileInput);
@@ -269,30 +275,41 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     document.body.appendChild(textOutput);
     let str = "";
     let byteRate;
-    let lineLength = 4;
-    let container = document.createElement("div");
-    setTimeout(function () {
-    }, 20000);
-    let p = document.createElement("p");
-    container.appendChild(p);
-    const textSinkCallback = new Tasks.Callback({
-      invoke: function (item) {
-        const startTime = performance.now();
-        p.innerHTML += item.toString();
-        if (p.innerHTML.length >= lineLength) {
-          p = document.createElement("p");
-          container.appendChild(p);
-        }
-        const endTime = performance.now();
-//        console.log(endTime - startTime);
-      },
+
+    const outputByteSequence = new Sequence.ByteSequence();
+    const utf8Encoder = new Streams.PassiveTransformToByte({
+      init: utf8EncodeInit,
+      transform: utf8Encode,
+      flush: utf8EncodeFlush,
     });
+    utf8Encoder.connectOutput(outputByteSequence.inputCallback);
+    const utf8Decoder = new Streams.PassiveTransform({
+      init: utf8DecodeInit,
+      transform: utf8Decode,
+      flush: utf8DecodeFlush,
+    });
+    utf8Decoder.connectOutput(utf8Encoder.inputCallback);
     const doneCallback = new Tasks.Callback({
       invoke: function () {
-        document.body.appendChild(container);
+        const outputView = outputByteSequence.createView();
+        const outputBlob = new Blob( [ outputView.toArrayBuffer() ] );
+        const outputURL = URL.createObjectURL(outputBlob);
+        const a = document.createElement("a");
+        a.display = "none";
+        a.href = outputURL;
+        a.download = "output.txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
         console.log("done");
       }
     });
+
+    utf8Decoder.flushedSignal.add(new Tasks.Callback({
+      invoke: utf8Encoder.flush,
+    }));
+    utf8Encoder.flushedSignal.add(doneCallback);
+
     fileInput.addEventListener("input", function (evt) {
       byteRate = parseInt(inpByteRate.value);
       const file = evt.target.files[0];
@@ -300,10 +317,11 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         blob: file,
         outputByteRate: byteRate,
       });
-      fileChunkPushSource.eofSignal.add(doneCallback);
       fileChunkPushSource.connectOutput(utf8Decoder.inputCallback);
+      fileChunkPushSource.eofSignal.add(new Tasks.Callback({
+        invoke: utf8Decoder.flush,
+      }));
     });
-    utf8Decoder.connectOutput(textSinkCallback);
   } catch (e) {
     ErrorLog.rethrow({
       functionName: "start",
