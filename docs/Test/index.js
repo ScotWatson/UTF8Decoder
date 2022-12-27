@@ -232,7 +232,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       let bytesWritten = 0;
       function writeByte(value) {
-        console.log("writeByte");
         if (bytesWritten < outputArray.length) {
           outputArray.at(bytesWritten).set(value);
           ++bytesWritten;
@@ -304,7 +303,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     document.body.appendChild(inpByteRate);
     const textOutput = document.createElement("textarea");
     document.body.appendChild(textOutput);
-    let str = "";
     let byteRate;
 
     const outputByteSequence = new Sequence.ByteSequence();
@@ -351,7 +349,10 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       fileChunkPushSource.connectOutput(utf8Decoder.inputCallback);
       fileChunkPushSource.eofSignal.add(new Tasks.Callback({
-        invoke: utf8Decoder.flush,
+        invoke: function () {
+          console.log("eof");
+          utf8Decoder.flush();
+        },
       }));
     });
   } catch (e) {
