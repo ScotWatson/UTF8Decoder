@@ -150,12 +150,13 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     fileInput.addEventListener("input", function (evt) {
       byteRate = parseInt(inpByteRate.value);
       const file = evt.target.files[0];
-      const fileChunkPushSource = new Streams.BlobChunkPushSource({
+      const fileChunkSource = new Streams.createBlobChunkSource({
         blob: file,
         outputByteRate: byteRate,
       });
-      fileChunkPushSource.connectOutput(utf8Decoder.inputCallback);
-      fileChunkPushSource.eofSignal.add(new Tasks.Callback({
+      const fileChunkPushSourceNode = new Streams.AsyncPushSourceNode(fileChunkSource);
+      fileChunkPushSourceNode.connectOutput(utf8Decoder.inputCallback);
+      fileChunkPushSourceNode.endedSignal.add(new Tasks.Callback({
         invoke: function () {
           console.log("eof");
           utf8Decoder.flush();
