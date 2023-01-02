@@ -87,7 +87,8 @@ const asyncSequence = (async function () {
 
 
 async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory, Sequence ] ) {
-  function utf8DecodeInit() {
+  const utf8Decode = new Streams.Transform();
+  utf8Decode.init = function () {
     const state = {};
     state.value = 0;
     state.contBytes = 0;
@@ -95,7 +96,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     state.inputIndex = 0;
     return state;
   }
-  function utf8Decode(args) {
+  utf8Decode.execute = function (args) {
     const { inputView, state } = (function () {
       let ret = {};
       if ("input" in args) {
@@ -191,7 +192,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
     }
   }
-  function utf8DecodeFlush(args) {
+  utf8Decode.flush = function (args) {
     const { state } = (function () {
       let ret = {};
       if (!("state" in args)) {
@@ -202,12 +203,13 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     })();
     return null;
   };
-  function utf8EncodeInit() {
+  const utf8Encode = new Streams.TransformToByte();
+  utf8Encode.init = function () {
     const state = {};
     state.holdBytes = [];
     return state;
   };
-  function utf8Encode(args) {
+  utf8Encode.execute = function (args) {
     try {
       const { inputItem, outputView, state } = (function () {
         let ret = {};
@@ -277,7 +279,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
     }
   }
-  function utf8EncodeFlush(args) {
+  utf8Encode.flush = function (args) {
     const { outputView, state } = (function () {
       let ret = {};
       if (!("output" in args)) {
@@ -309,17 +311,13 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     let byteRate;
 
     const outputByteSequence = new Sequence.ByteSequence();
-    const utf8Encoder = new Streams.PassiveTransformToByte({
-      init: utf8EncodeInit,
+    const utf8Encoder = new Streams.PassiveNodeToByte({
       transform: utf8Encode,
-      flush: utf8EncodeFlush,
       outputByteRate: 5,
     });
     utf8Encoder.connectOutput(outputByteSequence.inputCallback);
-    const utf8Decoder = new Streams.PassiveTransform({
-      init: utf8DecodeInit,
+    const utf8Decoder = new Streams.PassiveNode({
       transform: utf8Decode,
-      flush: utf8DecodeFlush,
     });
     utf8Decoder.connectOutput(utf8Encoder.inputCallback);
     const doneCallback = new Tasks.Callback({
