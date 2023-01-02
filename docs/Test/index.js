@@ -181,7 +181,8 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       self.setInterval(function () {
         const avgRunTime = fileChunkPushSourceNode.avgRunTime;
         const avgInterval = fileChunkPushSourceNode.avgInterval;
-        p4.innerHTML = "Avg Run Time: " + avgRunTime.toFixed(2) + " ms\n" + "Avg Interval: " + avgInterval.toFixed(2) + " ms\n" + "Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%";
+        p4.innerHTML = "";
+        p4.appendChild(document.createTextNode("Avg Run Time: " + avgRunTime.toFixed(2) + " ms\n" + "Avg Interval: " + avgInterval.toFixed(2) + " ms\n" + "Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%"));
       }, 150);
     });
   } catch (e) {
