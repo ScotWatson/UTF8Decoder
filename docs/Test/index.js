@@ -99,18 +99,29 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
   try {
     const imgBird = document.createElement("img");
     imgBird.src = "FlappingBird.gif";
-    imgBird.style.width = "200px";
+    imgBird.style.width = "100px";
     document.body.appendChild(imgBird);
-    document.body.appendChild(document.createElement("br"));
+    let p1 = document.createElement("p");
     const fileInput = document.createElement("input");
     fileInput.type = "file";
-    document.body.appendChild(fileInput);
+    p1.appendChild(fileInput);
+    document.body.appendChild(p1);
+    let p2 = document.createElement("p");
+    p2.appendChild(document.createTextNode("Byte Rate: "));
     const inpByteRate = document.createElement("input");
     inpByteRate.type = "number";
-    document.body.appendChild(inpByteRate);
-    const textOutput = document.createElement("textarea");
-    document.body.appendChild(textOutput);
-    let byteRate;
+    p2.appendChild(inpByteRate);
+    p2.appendChild(document.createTextNode(" bytes"));
+    document.body.appendChild(p2);
+    let p3 = document.createElement("p");
+    p3.appendChild(document.createTextNode("Interval: "));
+    const inpInterval = document.createElement("input");
+    inpInterval.type = "number";
+    p3.appendChild(inpInterval);
+    p3.appendChild(document.createTextNode(" ms"));
+    document.body.appendChild(p3);
+    let p4 = document.createElement("p");
+    document.body.appendChild(p4);
 
     const outputByteSequence = new Sequence.ByteSequence();
     const utf8Encoder = new Streams.PassiveNodeToByte({
@@ -126,7 +137,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       invoke: function () {
         console.log("utf8Encoder flushed");
         const outputView = outputByteSequence.createView();
-        const outputBlob = new Blob( [ outputView.toUint8Array() ] );
+        const outputBlob = new self.Blob( [ outputView.toUint8Array() ] );
         const outputURL = URL.createObjectURL(outputBlob);
         const a = document.createElement("a");
         a.display = "none";
@@ -148,7 +159,8 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     utf8Encoder.flushedSignal.add(doneCallback);
 
     fileInput.addEventListener("input", function (evt) {
-      byteRate = parseInt(inpByteRate.value);
+      const byteRate = parseInt(inpByteRate.value);
+      const interval = parseInt(inpInterval.value);
       const file = evt.target.files[0];
       const fileChunkSource = new Streams.createBlobChunkSource({
         blob: file,
@@ -156,7 +168,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       const fileChunkPushSourceNode = new Streams.AsyncPushSourceNode({
         asyncSource: fileChunkSource,
-        interval: 50,
+        interval: interval,
         smoothingFactor: 0.5,
       });
       fileChunkPushSourceNode.connectOutput(utf8Decoder.inputCallback);
@@ -166,6 +178,11 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
           utf8Decoder.flush();
         },
       }));
+      self.setInterval(function () {
+        const avgRunTime = fileChunkPushSourceNode.avgRunTime;
+        const avgInterval = fileChunkPushSourceNode.avgInterval;
+        p4.innerHTML = "Avg Run Time: " + avgRunTime.toFixed(2) + " ms\n" + "Avg Interval: " + avgInterval.toFixed(2) + " ms\n" + "Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%";
+      }, 150);
     });
   } catch (e) {
     ErrorLog.rethrow({
