@@ -169,6 +169,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       const fileChunkPushSourceNode = new Streams.AsyncPushSourceNode({
         asyncSource: fileChunkSource,
         interval: interval,
+        targetUsage: 0.10,
         smoothingFactor: 0.1,
       });
       fileChunkPushSourceNode.connectOutput(utf8Decoder.inputCallback);
