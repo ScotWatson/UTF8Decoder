@@ -114,11 +114,11 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
     p2.appendChild(document.createTextNode(" bytes"));
     document.body.appendChild(p2);
     let p3 = document.createElement("p");
-    p3.appendChild(document.createTextNode("Interval: "));
-    const inpInterval = document.createElement("input");
-    inpInterval.type = "number";
-    p3.appendChild(inpInterval);
-    p3.appendChild(document.createTextNode(" ms"));
+    p3.appendChild(document.createTextNode("Usage: "));
+    const inpUsage = document.createElement("input");
+    inpUsage.type = "number";
+    p3.appendChild(inpUsage);
+    p3.appendChild(document.createTextNode("%"));
     document.body.appendChild(p3);
     let p4 = document.createElement("p");
     document.body.appendChild(p4);
@@ -168,7 +168,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       });
       const fileChunkPushSourceNode = new Streams.AsyncPushSourceNode({
         asyncSource: fileChunkSource,
-        interval: interval,
         targetUsage: 0.10,
         smoothingFactor: 0.1,
       });
