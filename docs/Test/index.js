@@ -170,6 +170,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         asyncSource: fileChunkSource,
         targetUsage: usage,
         smoothingFactor: 0.1,
+        progressThreshold: 1,
       });
       fileChunkPushSourceNode.connectOutput(utf8Decoder.inputCallback);
       fileChunkPushSourceNode.endedSignal.add(new Tasks.Callback({
@@ -178,9 +179,13 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
           utf8Decoder.flush();
         },
       }));
+      const usageBar = document.createElement("progress");
+      usageBar.setAttribute("max", "100");
+      document.body.appendChild(usageBar);
       self.setInterval(function () {
         const avgRunTime = fileChunkPushSourceNode.avgRunTime;
         const avgInterval = fileChunkPushSourceNode.avgInterval;
+        const usagePercent = ((avgRunTime / avgInterval) * 100);
         p4.innerHTML = "";
         const p4_1 = document.createElement("p");
         p4_1.innerHTML = "Avg Run Time: " + avgRunTime.toFixed(2) + " ms";
@@ -189,14 +194,20 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         p4_2.innerHTML = "Avg Interval: " + avgInterval.toFixed(2) + " ms";
         p4.appendChild(p4_2);
         const p4_3 = document.createElement("p");
-        p4_3.innerHTML = "Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%";
+        p4_3.innerHTML = "Processor: " + usagePercent.toFixed(0) + "%";
         p4.appendChild(p4_3);
+        usageBar.setAttribute("value", usagePercent);
       }, 150);
       const progressBar = document.createElement("progress");
-      const bytesRead = 1024;
-      progressBar.setAttribute("value", (bytesRead / file.size) * 100);
       progressBar.setAttribute("max", "100");
       document.body.appendChild(progressBar);
+      let bytesRead = 0;
+      fileChunkPushSourceNode.progressSignal.add(new Tasks.Callback({
+        invoke: function () {
+          bytesRead += byteRate;
+          progressBar.setAttribute("value", (bytesRead / file.size) * 100);
+        },
+      }));
     });
   } catch (e) {
     ErrorLog.rethrow({
