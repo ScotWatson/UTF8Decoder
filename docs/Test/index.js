@@ -176,13 +176,14 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       fileChunkPushSourceNode.endedSignal.add(new Tasks.Callback({
         invoke: function () {
           console.log("eof");
+          self.clearInterval(statInterval);
           utf8Decoder.flush();
         },
       }));
       const usageBar = document.createElement("progress");
       usageBar.setAttribute("max", "100");
       document.body.appendChild(usageBar);
-      self.setInterval(function () {
+      statInterval = self.setInterval(function () {
         const avgRunTime = fileChunkPushSourceNode.avgRunTime;
         const avgInterval = fileChunkPushSourceNode.avgInterval;
         const usagePercent = ((avgRunTime / avgInterval) * 100);
@@ -194,7 +195,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         p4_2.innerHTML = "Avg Interval: " + avgInterval.toFixed(2) + " ms";
         p4.appendChild(p4_2);
         const p4_3 = document.createElement("p");
-        p4_3.innerHTML = "Processor: " + usagePercent.toFixed(0) + "%";
+        p4_3.innerHTML = "Usage: " + usagePercent.toFixed(0) + "%";
         p4.appendChild(p4_3);
         usageBar.setAttribute("value", usagePercent);
       }, 150);
@@ -205,6 +206,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       fileChunkPushSourceNode.progressSignal.add(new Tasks.Callback({
         invoke: function () {
           bytesRead += byteRate;
+          console.log(bytesRead);
           progressBar.setAttribute("value", (bytesRead / file.size) * 100);
         },
       }));
