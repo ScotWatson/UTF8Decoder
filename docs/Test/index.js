@@ -182,8 +182,18 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         const avgRunTime = fileChunkPushSourceNode.avgRunTime;
         const avgInterval = fileChunkPushSourceNode.avgInterval;
         p4.innerHTML = "";
-        p4.appendChild(document.createTextNode("Avg Run Time: " + avgRunTime.toFixed(2) + " ms\n" + "Avg Interval: " + avgInterval.toFixed(2) + " ms\n" + "Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%"));
+        const p4_1 = document.createTextNode("Avg Run Time: " + avgRunTime.toFixed(2) + " ms");
+        p4.appendChild(p4_1);
+        const p4_2 = document.createTextNode("Avg Interval: " + avgInterval.toFixed(2) + " ms"));
+        p4.appendChild(p4_2);
+        const p4_3 = document.createTextNode("Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%"));
+        p4.appendChild(p4_3);
       }, 150);
+      const progressBar = document.createElement("progress");
+      const bytesRead = 1024;
+      progressBar.setAttribute("value", (bytesRead / file.size) * 100);
+      progressBar.setAttribute("max", "100");
+      document.body.appendChild(progressBar);
     });
   } catch (e) {
     ErrorLog.rethrow({
