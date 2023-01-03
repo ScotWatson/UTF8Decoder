@@ -206,7 +206,6 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
       fileChunkPushSourceNode.progressSignal.add(new Tasks.Callback({
         invoke: function () {
           bytesRead += byteRate;
-          console.log(bytesRead);
           progressBar.setAttribute("value", (bytesRead / file.size) * 100);
         },
       }));
