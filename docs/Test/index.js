@@ -184,9 +184,9 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
         p4.innerHTML = "";
         const p4_1 = document.createTextNode("Avg Run Time: " + avgRunTime.toFixed(2) + " ms");
         p4.appendChild(p4_1);
-        const p4_2 = document.createTextNode("Avg Interval: " + avgInterval.toFixed(2) + " ms"));
+        const p4_2 = document.createTextNode("Avg Interval: " + avgInterval.toFixed(2) + " ms");
         p4.appendChild(p4_2);
-        const p4_3 = document.createTextNode("Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%"));
+        const p4_3 = document.createTextNode("Processor: " + ((avgRunTime / avgInterval) * 100).toFixed(0) + "%");
         p4.appendChild(p4_3);
       }, 150);
       const progressBar = document.createElement("progress");
