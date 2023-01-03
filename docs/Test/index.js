@@ -160,7 +160,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Mem
 
     fileInput.addEventListener("input", function (evt) {
       const byteRate = parseInt(inpByteRate.value);
-      const usage = parseInt(inpUsage.value);
+      const usage = parseInt(inpUsage.value) / 100;
       const file = evt.target.files[0];
       const fileChunkSource = new Streams.createBlobChunkSource({
         blob: file,
