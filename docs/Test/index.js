@@ -33,16 +33,7 @@ const asyncTypes = (async function () {
 
 const asyncStreams = (async function () {
   try {
-    const module = await import("https://scotwatson.github.io/Streams/Test/Streams.mjs");
-    return module;
-  } catch (e) {
-    console.error(e);
-  }
-})();
-
-const asyncUnicode = (async function () {
-  try {
-    const module = await import("https://scotwatson.github.io/Unicode/Test/Unicode.mjs");
+    const module = await import("https://scotwatson.github.io/Streams/Test/Nodes.mjs");
     return module;
   } catch (e) {
     console.error(e);
@@ -52,15 +43,6 @@ const asyncUnicode = (async function () {
 const asyncTasks = (async function () {
   try {
     const module = await import("https://scotwatson.github.io/Tasks/Test/Tasks.mjs");
-    return module;
-  } catch (e) {
-    console.error(e);
-  }
-})();
-
-const asyncMemory = (async function () {
-  try {
-    const module = await import("https://scotwatson.github.io/Memory/Test/Memory.mjs");
     return module;
   } catch (e) {
     console.error(e);
@@ -87,7 +69,7 @@ const asyncEncoding = (async function () {
 
 (async function () {
   try {
-    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncUnicode, asyncTasks, asyncMemory, asyncSequence, asyncEncoding ] );
+    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncTasks, asyncSequence, asyncEncoding ] );
     start(modules);
   } catch (e) {
     console.error(e);
@@ -95,7 +77,7 @@ const asyncEncoding = (async function () {
 })();
 
 
-async function start( [ evtWindow, ErrorLog, Types, Streams, Unicode, Tasks, Memory, Sequence, Encoding ] ) {
+async function start( [ evtWindow, ErrorLog, Types, Streams, Tasks, Sequence, Encoding ] ) {
   try {
     const imgBird = document.createElement("img");
     imgBird.src = "FlappingBird.gif";
