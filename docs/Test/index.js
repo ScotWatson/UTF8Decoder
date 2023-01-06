@@ -106,12 +106,12 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Tasks, Sequence, En
     document.body.appendChild(p4);
 
     const outputByteSequence = new Sequence.ByteSequence();
-    const utf8Encoder = new Streams.PassiveNodeToByte({
+    const utf8Encoder = new Streams.PassiveTransformNodeToByte({
       transform: Encoding.utf8Encode,
       outputByteRate: 5,
     });
     utf8Encoder.connectOutput(outputByteSequence.inputCallback);
-    const utf8Decoder = new Streams.PassiveNode({
+    const utf8Decoder = new Streams.PassiveTransformNode({
       transform: Encoding.utf8Decode,
     });
     utf8Decoder.connectOutput(utf8Encoder.inputCallback);
