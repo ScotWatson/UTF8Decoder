@@ -67,7 +67,7 @@ const asyncEncoding = (async function () {
   }
 })();
 
-const asyncFiless = (async function () {
+const asyncFiles = (async function () {
   try {
     const module = await import("https://scotwatson.github.io/Files/Test/Files.mjs");
     return module;
