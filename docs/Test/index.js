@@ -158,7 +158,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Tasks, Sequence, En
         outputByteRate: byteRate,
       });
       const fileChunkPushSourceNode = new Streams.AsyncPushSourceNode({
-        asyncSource: fileChunkSource,
+        source: fileChunkSource,
         targetUsage: usage,
         smoothingFactor: 0.1,
         progressThreshold: 1,
