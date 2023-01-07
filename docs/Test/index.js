@@ -67,9 +67,18 @@ const asyncEncoding = (async function () {
   }
 })();
 
+const asyncOperations = (async function () {
+  try {
+    const module = await import("https://scotwatson.github.io/Streams/Test/Operations.mjs");
+    return module;
+  } catch (e) {
+    console.error(e);
+  }
+})();
+
 (async function () {
   try {
-    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncTasks, asyncSequence, asyncEncoding ] );
+    const modules = await Promise.all( [ asyncWindow, asyncErrorLog, asyncTypes, asyncStreams, asyncTasks, asyncSequence, asyncEncoding, asyncOperations ] );
     start(modules);
   } catch (e) {
     console.error(e);
@@ -77,7 +86,7 @@ const asyncEncoding = (async function () {
 })();
 
 
-async function start( [ evtWindow, ErrorLog, Types, Streams, Tasks, Sequence, Encoding ] ) {
+async function start( [ evtWindow, ErrorLog, Types, Streams, Tasks, Sequence, Encoding, Operations ] ) {
   try {
     const imgBird = document.createElement("img");
     imgBird.src = "FlappingBird.gif";
@@ -144,7 +153,7 @@ async function start( [ evtWindow, ErrorLog, Types, Streams, Tasks, Sequence, En
       const byteRate = parseInt(inpByteRate.value);
       const usage = parseInt(inpUsage.value) / 100;
       const file = evt.target.files[0];
-      const fileChunkSource = new Streams.createBlobChunkSource({
+      const fileChunkSource = new Operations.createBlobChunkSource({
         blob: file,
         outputByteRate: byteRate,
       });
